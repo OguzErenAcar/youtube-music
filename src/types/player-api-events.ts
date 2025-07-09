@@ -42,6 +42,22 @@ export interface Content {
 
 export interface MusicQueueRenderer {
   hack: boolean;
+  content?: { playlistPanelRenderer: playlistPanelRenderer };
+}
+export interface playlistPanelRenderer {
+  contents: { playlistPanelVideoRenderer: playlistPanelVideoRenderer[] };
+  continuations: nextRadioContinuationData[];
+}
+export interface nextRadioContinuationData {
+  clickTrackingParams: string;
+  continuation: string;
+}
+
+export interface playlistPanelVideoRenderer {
+  title: runs[];
+}
+export interface runs {
+  text: string;
 }
 
 export interface Endpoint {
