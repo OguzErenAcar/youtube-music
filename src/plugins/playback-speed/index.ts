@@ -7,7 +7,7 @@ export default createPlugin({
   description: () => t('plugins.playback-speed.description'),
   restartNeeded: false,
   config: {
-    enabled: false,
+    enabled: true,
   },
   renderer: {
     stop: onUnload,

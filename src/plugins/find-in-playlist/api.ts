@@ -1,4 +1,4 @@
-import { extractToken, getAuthorizationHeader, getClient } from './client'
+import { extractToken, getAuthorizationHeader, getClient } from './client';
 
 const cookies = document.cookie
   .split(';')
@@ -9,7 +9,8 @@ const formattedCookie = `${cookies}`.trim().replace(/\s+/g, ' ');
 
 export const getPlaylistRenderer = async (
   playlistId: string,
-): Promise<unknown | null> => {
+  continuation: string | null,
+): Promise<unknown> => {
   const token = extractToken();
   if (!token) return null;
 
@@ -28,7 +29,8 @@ export const getPlaylistRenderer = async (
         context: {
           client: getClient(),
         },
-        browseId: `VL${playlistId}`, // dikkat: başına 'VL' gelecek
+        browseId: `VL${playlistId}`,
+        continuation,
       }),
     },
   );
@@ -39,4 +41,27 @@ export const getPlaylistRenderer = async (
   } catch {
     return null;
   }
+};
+
+export const getPlaylistRendererV3 = async (
+  playlistId: string,
+  nextPageT: string | null = null,
+) => {
+  const API_KEY = 'AIzaSyC_zwXJXgAv-Uo3PBdryIf27tE7VuEFI2Q';
+
+  const baseUrl = new URL(
+    'https://www.googleapis.com/youtube/v3/playlistItems',
+  );
+  baseUrl.searchParams.set('part', 'snippet');
+  baseUrl.searchParams.set('playlistId', playlistId);
+  baseUrl.searchParams.set('maxResults', '49');
+  baseUrl.searchParams.set('key', API_KEY);
+
+  if (nextPageT) {
+    baseUrl.searchParams.set('pageToken', nextPageT);
+  }
+
+  const res = await fetch(baseUrl.toString());
+  const data = await res.json();
+  return data;
 };
