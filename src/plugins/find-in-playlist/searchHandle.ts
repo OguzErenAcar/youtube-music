@@ -1,18 +1,13 @@
 import searchBarHtml from './searchbar.html?raw';
 import dropDownItemHtml from './dropdown-item.html?raw';
 
-interface songElement {
+export interface songElement {
   name: string;
-  id: string;
-  playListId: string;
-  imgUrl: {
-    url?: string;
-    width?: number;
-    height?: number;
-  } | null;
-  duration: string;
+  artist: string;
+  img: string;
+  id: string | null;
+  playListId: string | null;
 }
-
 const clearResults = () => {
   const sbardiv = document.querySelector('#sbardiv') as HTMLDivElement;
   const ul = sbardiv.querySelector('ul');
@@ -27,7 +22,7 @@ const showResults = (list: songElement[]) => {
     const li = document.createElement('li');
     li.innerHTML = dropDownItemHtml;
     const itemImg = li.querySelector('.item-img') as HTMLImageElement;
-    itemImg.src = item.imgUrl?.url || '';
+    itemImg.src = item.img || '';
     itemImg.width = 70;
     const songName = li.querySelector('.song-name') as HTMLSpanElement;
     songName.innerHTML = item.name.split('-')[0];
@@ -48,16 +43,21 @@ export const addSearch = (pageType: string | null, list: songElement[]) => {
   const sidePanelId = '#side-panel';
   const secondaryContentId = '#secondary #contents';
   const sidePanel = document.querySelector(sidePanelId) as HTMLElement;
+  const body = document.querySelector('body') as HTMLBodyElement;
   const secondaryContent = document.querySelector(
     secondaryContentId,
   ) as HTMLElement;
-
+  console.log('burda');
   switch (pageType) {
     case 'watch':
       if (!isAdded(sidePanel, id)) addSearchTo(sidePanel, list);
       break;
     case 'playlist':
       if (!isAdded(secondaryContent, id)) addSearchTo(secondaryContent, list);
+      break;
+    case 'body':
+      if (!isAdded(body, id)) addSearchTo(body, list);
+      //remove();
       break;
   }
 };
@@ -87,4 +87,21 @@ const addSearchTo = (container: HTMLElement, list: songElement[]) => {
   sbarInput.addEventListener('input', inputListener);
   sbarInput.addEventListener('blur', () => (isActive = false));
   sbarInput.addEventListener('focus', () => (isActive = true));
+};
+
+const remove = () => {
+  const bar = document.querySelector('#searchbar');
+  bar?.addEventListener('blur', () => {
+    const body = document.querySelector('body') as HTMLBodyElement;
+    body.classList.remove('blur-efc');
+    bar.remove();
+  });
+};
+const removeOnFocus = () => {
+  const bar = document.querySelector('#searchbar');
+  bar?.addEventListener('click', () => {
+    const body = document.querySelector('body') as HTMLBodyElement;
+    body.classList.add('blur-efc');
+    bar.remove();
+  });
 };

@@ -28,7 +28,7 @@ export default createPlugin<
   restartNeeded: false,
   addedVersion: '3.2.X',
   config: {
-    enabled: false,
+    enabled: true,
   },
   renderer: {
     waiting: false,
