@@ -14,29 +14,6 @@ export interface SongElement {
   } | null;
 }
 
-interface ResourceId {
-  videoId: string;
-}
-
-interface Thumbnail {
-  default: {
-    url?: string;
-    width?: number;
-    height?: number;
-  };
-}
-
-interface Snippet {
-  title: string;
-  playlistId: string;
-  resourceId: ResourceId;
-  thumbnails: Thumbnail;
-}
-
-interface ItemV3 {
-  snippet: Snippet;
-}
-
 interface MusicPlayButtonRenderer {
   accessibilityPlayData?: {
     accessibilityData?: {
@@ -79,9 +56,16 @@ interface MusicResponsiveListItemRenderer {
     musicThumbnailRenderer?: MusicThumbnailRenderer;
   };
 }
-
+interface ContinuationItemRenderer {
+  continuationEndpoint?: {
+    continuationCommand?: {
+      token?: string;
+    };
+  };
+}
 interface Item {
   musicResponsiveListItemRenderer?: MusicResponsiveListItemRenderer;
+  continuationItemRenderer?: ContinuationItemRenderer;
 }
 
 interface MusicPlaylistShelfRenderer {
@@ -110,43 +94,57 @@ interface TwoColumnBrowseResultsRenderer {
 interface Contents {
   twoColumnBrowseResultsRenderer?: TwoColumnBrowseResultsRenderer;
 }
+interface onResponseReceivedActions {
+  appendContinuationItemsAction?: {
+    continuationItems?: Item[];
+  };
+}
 
 interface ResponseType {
   contents?: Contents;
-  nextPageToken?: string;
-  items?: ItemV3[];
+  onResponseReceivedActions?: onResponseReceivedActions[];
 }
 
 // --- Functions ---
 
 export const getContinuation = (response: unknown): string | null => {
+  if (!response || typeof response !== 'object') return null;
   const resp = response as ResponseType;
-  return (
+  const contents =
     resp?.contents?.twoColumnBrowseResultsRenderer?.secondaryContents
       ?.sectionListRenderer?.contents?.[0]?.musicPlaylistShelfRenderer
-      ?.continuations?.[0]?.nextContinuationData?.continuation ?? null
+      ?.contents;
+  if (!contents || !Array.isArray(contents) || contents.length === 0)
+    return null;
+  const lastIndex = contents.length - 1;
+  return (
+    contents[lastIndex]?.continuationItemRenderer?.continuationEndpoint
+      ?.continuationCommand?.token ?? null
   );
 };
-
-export const getnextPageT = (response: unknown): string | null => {
+//onResponseReceivedActions[0].appendContinuationItemsAction.continuationItems[100].continuationItemRenderer.continuationEndpoint.continuationCommand.token
+export const getContinuationFromContinuation = (
+  response: unknown,
+): string | null => {
   const resp = response as ResponseType;
-  return resp?.nextPageToken ?? null;
+  const items =
+    resp.onResponseReceivedActions?.[0]?.appendContinuationItemsAction
+      ?.continuationItems ?? null;
+  const lastItem =
+    items && items.length > 0 ? items[items.length - 1] : undefined;
+  const continuation =
+    lastItem?.continuationItemRenderer?.continuationEndpoint
+      ?.continuationCommand?.token ?? null;
+  return continuation;
 };
 
-export const arrayToPlaylistV3 = (response: unknown): SongElement[] => {
+//onResponseReceivedActions[0].appendContinuationItemsAction.continuationItems
+export const arrayToPlaylistFromContinuation = (response: unknown) => {
   const resp = response as ResponseType;
-  const array = (resp.items as ItemV3[]) || [];
-  const updatedList: SongElement[] = array.map((item) => {
-    return {
-      name: item.snippet.title,
-      playListId: item.snippet.playlistId,
-      id: item.snippet.resourceId.videoId,
-      duration: '',
-      imgUrl: item.snippet.thumbnails.default,
-    };
-  });
-  //console.log('updatedList', updatedList);
-  return updatedList;
+  const array =
+    resp.onResponseReceivedActions?.[0]?.appendContinuationItemsAction
+      ?.continuationItems ?? null;
+  return arrayToSongElement(array);
 };
 
 export const arrayToPlaylist = (response: unknown): SongElement[] => {
@@ -158,7 +156,13 @@ export const arrayToPlaylist = (response: unknown): SongElement[] => {
   const filteredArray = array.filter(
     (item) => item.musicResponsiveListItemRenderer !== undefined,
   );
-  const updatedList: SongElement[] = filteredArray.map((item) => {
+
+  return arrayToSongElement(filteredArray);
+};
+
+const arrayToSongElement = (array: Item[] | null): SongElement[] => {
+  if (!array) return [];
+  const updatedList: SongElement[] = array.map((item) => {
     const renderer = item.musicResponsiveListItemRenderer;
     // Defensive: renderer may be undefined
     if (!renderer) {
@@ -194,6 +198,5 @@ export const arrayToPlaylist = (response: unknown): SongElement[] => {
       imgUrl: imgObj,
     };
   });
-  console.log('updatedList', updatedList);
   return updatedList;
 };

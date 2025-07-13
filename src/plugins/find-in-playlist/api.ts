@@ -29,7 +29,7 @@ export const getPlaylistRenderer = async (
         context: {
           client: getClient(),
         },
-        browseId: `VL${playlistId}`,
+        browseId: `${playlistId}`,
         continuation,
       }),
     },
@@ -54,11 +54,12 @@ export const getPlaylistRendererV3 = async (
   );
   baseUrl.searchParams.set('part', 'snippet');
   baseUrl.searchParams.set('playlistId', playlistId);
-  baseUrl.searchParams.set('maxResults', '49');
+  baseUrl.searchParams.set('maxResults', '50');
   baseUrl.searchParams.set('key', API_KEY);
 
   if (nextPageT) {
-    baseUrl.searchParams.set('pageToken', nextPageT);
+    console.log('nextPageT', nextPageT);
+    baseUrl.searchParams.set('pageToken', nextPageT.trim());
   }
 
   const res = await fetch(baseUrl.toString());

@@ -81,7 +81,6 @@ const addSearchTo = (container: HTMLElement, list: songElement[]) => {
           return true;
         return false;
       });
-      //console.log('filterList', filterList);
       if (filterList) showResults(filterList);
     }, 500);
   };
